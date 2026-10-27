@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useDebouncedCallback } from "use-debounce";
 
-import { fetchNotes, createNote, deleteNote } from "../../services/noteService";
+import { fetchNotes } from "../../services/noteService";
 
 import SearchBox from "../SearchBox/SearchBox";
 import Pagination from "../Pagination/Pagination";
@@ -12,9 +12,7 @@ import Modal from "../Modal/Modal";
 
 import styles from "./App.module.css";
 
-export interface AppProps {}
-
-export default function App({}: AppProps) {
+export default function App() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -30,21 +28,8 @@ export default function App({}: AppProps) {
     placeholderData: (prev) => prev,
   });
 
-  const notes = data?.data ?? [];
+  const notes = data?.notes ?? [];
   const totalPages = data?.totalPages ?? 1;
-
-  const handleCreateNote = async (
-    title: string,
-    content: string,
-    tag: string
-  ) => {
-    await createNote({ title, content, tag });
-    setIsModalOpen(false);
-  };
-
-  const handleDeleteNote = async (id: string) => {
-    await deleteNote(id);
-  };
 
   return (
     <div className={styles.app}>
@@ -68,15 +53,12 @@ export default function App({}: AppProps) {
       </header>
 
       {!isLoading && !isError && notes.length > 0 && (
-        <NoteList notes={notes} onDelete={handleDeleteNote} />
+        <NoteList notes={notes} />
       )}
 
       {isModalOpen && (
         <Modal onClose={() => setIsModalOpen(false)}>
-          <NoteForm
-            onSubmit={handleCreateNote}
-            onCancel={() => setIsModalOpen(false)}
-          />
+          <NoteForm onCancel={() => setIsModalOpen(false)} />
         </Modal>
       )}
     </div>
