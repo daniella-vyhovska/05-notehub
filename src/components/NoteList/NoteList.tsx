@@ -12,11 +12,12 @@ export default function NoteList({ notes }: NoteListProps) {
   const queryClient = useQueryClient();
 
   const mutation = useMutation({
-    mutationFn: deleteNote,
-    onSuccess: () => {
-      queryClient.invalidateQueries(["notes"]);
-    },
-  });
+  mutationFn: deleteNote,
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ["notes"] });
+  },
+});
+
 
   const handleDelete = (id: string) => {
     mutation.mutate(id);
@@ -30,7 +31,6 @@ export default function NoteList({ notes }: NoteListProps) {
           <p className={styles.content}>{note.content}</p>
 
           <div className={styles.footer}>
-            {/* ❗ Тепер tag відображається правильно */}
             <span className={styles.tag}>{note.tag}</span>
 
             <button
