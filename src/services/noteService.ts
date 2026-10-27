@@ -5,17 +5,14 @@ const BASE_URL = "https://notehub-public.goit.study/api/notes";
 const TOKEN = import.meta.env.VITE_NOTEHUB_TOKEN;
 
 export interface FetchNotesResponse {
-  data: Note[];
-  page: number;
-  perPage: number;
-  total: number;
+  notes: Note[];
   totalPages: number;
 }
 
 export interface CreateNotePayload {
   title: string;
   content: string;
-  tag: string;
+  tag: "Todo" | "Work" | "Personal" | "Meeting" | "Shopping";
 }
 
 export interface CreateNoteResponse {
@@ -37,14 +34,16 @@ export async function fetchNotes(
   page: number,
   search?: string
 ): Promise<FetchNotesResponse> {
-  const response = await api.get<FetchNotesResponse>("", {
-    params: {
-      page,
-      perPage: 12,
-      search,
-    },
-  });
+  const params: Record<string, string | number> = {
+    page,
+    perPage: 12,
+  };
 
+  if (search) {
+    params.search = search;
+  }
+
+  const response = await api.get<FetchNotesResponse>("", { params });
   return response.data;
 }
 

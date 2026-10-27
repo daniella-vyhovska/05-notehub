@@ -1,10 +1,11 @@
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createNote } from "../../services/noteService";
 
 import styles from "./NoteForm.module.css";
 
 export interface NoteFormProps {
-  onSubmit: (title: string, content: string, tag: string) => void;
   onCancel?: () => void;
 }
 
@@ -13,9 +14,10 @@ const validationSchema = Yup.object().shape({
     .min(3, "Title must be at least 3 characters")
     .max(50, "Title must be at most 50 characters")
     .required("Title is required"),
-  content: Yup.string()
-    .max(500, "Content must be at most 500 characters")
-    .required("Content is required"),
+
+  // ❗ content НЕ обов’язкове
+  content: Yup.string().max(500, "Content must be at most 500 characters"),
+
   tag: Yup.string()
     .oneOf(
       ["Todo", "Work", "Personal", "Meeting", "Shopping"],
@@ -24,7 +26,17 @@ const validationSchema = Yup.object().shape({
     .required("Tag is required"),
 });
 
-export default function NoteForm({ onSubmit, onCancel }: NoteFormProps) {
+export default function NoteForm({ onCancel }: NoteFormProps) {
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: createNote,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["notes"]);
+      if (onCancel) onCancel();
+    },
+  });
+
   return (
     <Formik
       initialValues={{
@@ -34,7 +46,7 @@ export default function NoteForm({ onSubmit, onCancel }: NoteFormProps) {
       }}
       validationSchema={validationSchema}
       onSubmit={(values, actions) => {
-        onSubmit(values.title, values.content, values.tag);
+        mutation.mutate(values);
         actions.resetForm();
       }}
     >
@@ -100,10 +112,11 @@ export default function NoteForm({ onSubmit, onCancel }: NoteFormProps) {
             >
               Cancel
             </button>
+
             <button
               type="submit"
               className={styles.submitButton}
-              disabled={isSubmitting}
+              disabled={isSubmitting || mutation.isPending}
             >
               Create note
             </button>
